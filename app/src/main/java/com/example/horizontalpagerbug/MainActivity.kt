@@ -11,60 +11,85 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.min
 import com.example.horizontalpagerbug.ui.theme.HorizontalPagerBugTheme
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
-import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import kotlinx.coroutines.flow.collectLatest
-import kotlin.math.abs
 
 class MainActivity : ComponentActivity() {
-    @OptIn(ExperimentalPagerApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            HorizontalPagerBugTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-                    val scrollState = rememberPagerState()
-                    val scrollButtonState = rememberLazyListState()
-                    val density = LocalDensity.current
-                    val configuration = LocalConfiguration.current
-                    LaunchedEffect(scrollState) {
-                        snapshotFlow { scrollState.currentPageOffset }.collectLatest { offsetPercent ->
-                            Log.d("ggggg", offsetPercent.toString())
-                            val offset = with(density) { (configuration.screenWidthDp.dp * offsetPercent).roundToPx() }
-                            scrollButtonState.scrollToItem(scrollState.currentPage, offset)
-                        }
-                    }
-                    Column(
+            Content()
+        }
+    }
+}
+
+@OptIn(ExperimentalPagerApi::class)
+@Composable
+private fun Content() {
+    HorizontalPagerBugTheme {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
+            val scrollState = rememberPagerState()
+            val scrollButtonState = rememberLazyListState()
+            val density = LocalDensity.current
+            val configuration = LocalConfiguration.current
+            LaunchedEffect(scrollState) {
+                snapshotFlow { scrollState.currentPageOffset }.collectLatest { offsetPercent ->
+                    Log.d("pageOffset", offsetPercent.toString())
+                    val offset = with(density) { (configuration.screenWidthDp.dp * offsetPercent).roundToPx() }
+                    scrollButtonState.scrollToItem(scrollState.currentPage, offset)
+                }
+            }
+            val horizontalPagerPadding = remember {
+                min((configuration.screenWidthDp.dp - 190.dp) / 2, 85.dp)
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+            ) {
+                HorizontalPager(
+                    count = 2,
+                    modifier = Modifier
+                        .padding(vertical = 16.dp)
+                        .fillMaxWidth(),
+                    state = scrollState,
+                    contentPadding = PaddingValues(horizontal = horizontalPagerPadding),
+                    itemSpacing = 50.dp // FIXME If I comment this everything will be fine
+                ) {
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                    ) {
-                        HorizontalPagerWidget(scrollState)
-                        LazyRow(
+                            .size(width = 200.dp, height = 200.dp)
+                            .background(Color.Red)
+                    )
+                }
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    state = scrollButtonState,
+                    contentPadding = PaddingValues(vertical = 20.dp)
+                ) {
+                    items(2) {
+                        Button(
                             modifier = Modifier
-                                .fillMaxWidth(),
-                            state = scrollButtonState,
-                            contentPadding = PaddingValues(vertical = 20.dp)
+                                .width(configuration.screenWidthDp.dp)
+                                .padding(horizontal = 20.dp),
+                            onClick = {}
                         ) {
-                            items(2) {
-                                Button(
-                                    modifier = Modifier
-                                        .align(Alignment.CenterHorizontally)
-                                        .width(configuration.screenWidthDp.dp)
-                                        .padding(horizontal = 20.dp),
-                                    onClick = {}
-                                ) {
-                                }
-                            }
+                            Text("Button")
                         }
                     }
                 }
@@ -73,28 +98,8 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalPagerApi::class)
+@Preview
 @Composable
-fun HorizontalPagerWidget(scrollState: PagerState) {
-    HorizontalPager(
-        count = 2,
-        modifier = Modifier
-            .padding(vertical = 16.dp)
-            .fillMaxWidth(),
-        state = scrollState,
-        itemSpacing = 40.dp
-    ) {
-        Box(
-            modifier = Modifier.size(width = 200.dp, height = 200.dp)
-        ) {
-            Button(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .background(color = Color.Black)
-                    .size(width = 200.dp, height = 200.dp),
-                onClick = {}
-            ) {
-            }
-        }
-    }
+private fun ContentPreview() {
+    Content()
 }
