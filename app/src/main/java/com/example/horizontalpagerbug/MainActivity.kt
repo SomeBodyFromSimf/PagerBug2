@@ -81,7 +81,8 @@ fun HorizontalPagerWidget(scrollState: PagerState) {
         modifier = Modifier
             .padding(vertical = 16.dp)
             .fillMaxWidth(),
-        state = scrollState
+        state = scrollState,
+        itemSpacing = 40.dp
     ) {
         Box(
             modifier = Modifier.size(width = 200.dp, height = 200.dp)
